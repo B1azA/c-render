@@ -1,0 +1,6 @@
+.cache/
+CMakeFiles/
+build/
+release/
+.clang-format
+CMakeCache.txt
