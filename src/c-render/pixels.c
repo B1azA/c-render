@@ -1,4 +1,8 @@
 #include "pixels.h"
+#include "cglm/affine.h"
+#include "cglm/cam.h"
+#include "cglm/mat4.h"
+#include "cglm/types.h"
 #include <SDL_log.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -158,4 +162,128 @@ void CR_PixelsDrawTriangle(Pixels *pixels, float x0, float y0, float x1,
 		CR_PixelsDrawLine(pixels, x1, y1, x2, y2, color);
 		CR_PixelsDrawLine(pixels, x0, y0, x2, y2, color);
 	}
+}
+
+void CR_PixelsDrawTriangleMVP(Pixels *pixels, float x0, float y0, float z0,
+							  float x1, float y1, float z1, float x2, float y2,
+							  float z2, Color color, Model model, View view,
+							  Projection projection) {
+	mat4 MVP;
+
+	// create model matrix from translation, rotation and scale
+	mat4 modelMat;
+
+	mat4 translation;
+	mat4 rotation;
+	mat4 scale;
+
+	vec3 direction = {model.transX, model.transY, model.transZ};
+
+	glm_translate_make(translation, direction);
+
+	vec3 pivot = {0, 0, 0};
+
+	glm_rotate_atm(rotation, pivot, model.rotX, (vec3){1, 0, 0});
+	glm_rotate_at(rotation, pivot, model.rotY, (vec3){0, 1, 0});
+	glm_rotate_at(rotation, pivot, model.rotZ, (vec3){0, 0, 1});
+
+	glm_scale_make(scale, (vec3){model.scaleX, model.scaleY, model.scaleZ});
+
+	glm_mat4_mulN((mat4 *[]){&translation, &rotation, &scale}, 3, modelMat);
+
+	// create view (camera) matrix
+	mat4 viewMat;
+
+	mat4 viewTranslation;
+	mat4 viewRotation;
+
+	vec3 viewDirection = {-view.posX, -view.posY, -view.posZ};
+
+	glm_translate_make(viewTranslation, viewDirection);
+
+	glm_rotate_atm(viewRotation, pivot, -view.rotX, (vec3){1, 0, 0});
+	glm_rotate_at(viewRotation, pivot, -view.rotY, (vec3){0, 1, 0});
+	glm_rotate_at(viewRotation, pivot, -view.rotZ, (vec3){0, 0, 1});
+
+	glm_mat4_mul(viewRotation, viewTranslation, viewMat);
+
+	// create projection matrix
+	mat4 projMat;
+
+	glm_perspective(projection.fov, projection.aspect, projection.nearZ,
+					projection.farZ, projMat);
+
+	// create MVP matrix
+	glm_mat4_mulN((mat4 *[]){&projMat, &viewMat, &modelMat}, 3, MVP);
+
+	vec4 pointA = {x0, y0, z0, 1};
+	vec4 pointB = {x1, y1, z1, 1};
+	vec4 pointC = {x2, y2, z2, 1};
+
+	// move points
+	glm_mat4_mulv(MVP, pointA, pointA);
+	glm_mat4_mulv(MVP, pointB, pointB);
+	glm_mat4_mulv(MVP, pointC, pointC);
+
+	CR_PixelsDrawTriangle(pixels, pointA[0], pointA[1], pointB[0], pointB[1],
+						  pointC[0], pointC[1], color);
+}
+
+void CR_PixelsDrawTriangleMV(Pixels *pixels, float x0, float y0, float x1,
+							 float y1, float x2, float y2, Color color,
+							 Model model, View view) {
+
+	mat4 MV;
+
+	// create model matrix from translation, rotation and scale
+	mat4 modelMat;
+
+	mat4 translation;
+	mat4 rotation;
+	mat4 scale;
+
+	vec3 direction = {model.transX, model.transY, model.transZ};
+
+	glm_translate_make(translation, direction);
+
+	vec3 pivot = {0, 0, 0};
+
+	glm_rotate_atm(rotation, pivot, model.rotX, (vec3){1, 0, 0});
+	glm_rotate_at(rotation, pivot, model.rotY, (vec3){0, 1, 0});
+	glm_rotate_at(rotation, pivot, model.rotZ, (vec3){0, 0, 1});
+
+	glm_scale_make(scale, (vec3){model.scaleX, model.scaleY, model.scaleZ});
+
+	glm_mat4_mulN((mat4 *[]){&translation, &rotation, &scale}, 3, modelMat);
+
+	// create view (camera) matrix
+	mat4 viewMat;
+
+	mat4 viewTranslation;
+	mat4 viewRotation;
+
+	vec3 viewDirection = {-view.posX, -view.posY, -view.posZ};
+
+	glm_translate_make(viewTranslation, viewDirection);
+
+	glm_rotate_atm(viewRotation, pivot, -view.rotX, (vec3){1, 0, 0});
+	glm_rotate_at(viewRotation, pivot, -view.rotY, (vec3){0, 1, 0});
+	glm_rotate_at(viewRotation, pivot, -view.rotZ, (vec3){0, 0, 1});
+
+	glm_mat4_mul(viewRotation, viewTranslation, viewMat);
+
+	// create MV matrix
+	glm_mat4_mul(viewMat, modelMat, MV);
+
+	vec4 pointA = {x0, y0, 0, 1};
+	vec4 pointB = {x1, y1, 0, 1};
+	vec4 pointC = {x2, y2, 0, 1};
+
+	// move points
+	glm_mat4_mulv(MV, pointA, pointA);
+	glm_mat4_mulv(MV, pointB, pointB);
+	glm_mat4_mulv(MV, pointC, pointC);
+
+	CR_PixelsDrawTriangle(pixels, pointA[0], pointA[1], pointB[0], pointB[1],
+						  pointC[0], pointC[1], color);
 }

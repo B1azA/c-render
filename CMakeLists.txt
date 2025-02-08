@@ -12,7 +12,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(${PROJECT_NAME}
 	src/main.c
 	src/c-render/pixels.c
-	src/c-render/model.c
 )
 
 target_link_libraries(${PROJECT_NAME} SDL2)

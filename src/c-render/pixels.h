@@ -1,6 +1,7 @@
 #ifndef PIXELS_H_
 #define PIXELS_H_
 
+#include "MVP.h"
 #include <stdint.h>
 
 /// Buffer of RGBA pixels. Basic struct for drawing.
@@ -54,4 +55,13 @@ void CR_PixelsDrawLine(Pixels *pixels, float x0, float y0, float x1, float y1,
  */
 void CR_PixelsDrawTriangle(Pixels *pixels, float x0, float y0, float x1,
 						   float y1, float x2, float y2, Color color);
+
+void CR_PixelsDrawTriangleMVP(Pixels *pixels, float x0, float y0, float z0,
+							  float x1, float y1, float z1, float x2, float y2,
+							  float z2, Color color, Model model, View view,
+							  Projection projection);
+
+void CR_PixelsDrawTriangleMV(Pixels *pixels, float x0, float y0, float x1,
+							 float y1, float x2, float y2, Color color,
+							 Model model, View view);
 #endif
