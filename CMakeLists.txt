@@ -6,7 +6,7 @@ add_subdirectory(dependencies/SDL-release-2.30.10/)
 add_subdirectory(dependencies/cglm-0.9.4)
 add_subdirectory("./dependencies/libspng-0.7.4/")
 
-set(CMAKE_C_STANDARD 11) # Requires C11 standard
+set(CMAKE_C_STANDARD 23) # Requires C11 standard
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(${PROJECT_NAME}

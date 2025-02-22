@@ -61,7 +61,10 @@ void CR_PixelsDrawTriangleMVP(Pixels *pixels, float x0, float y0, float z0,
 							  float z2, Color color, Model model, View view,
 							  Projection projection);
 
-void CR_PixelsDrawTriangleMV(Pixels *pixels, float x0, float y0, float x1,
-							 float y1, float x2, float y2, Color color,
-							 Model model, View view);
+void CR_PixelsDrawTriangles(Pixels *pixels, float *vertices, int verticesLength,
+							Color color);
+
+void CR_PixelsDrawTrianglesMVP(Pixels *pixels, float *vertices,
+							   int verticesLength, Color color, Model model,
+							   View view, Projection projection);
 #endif

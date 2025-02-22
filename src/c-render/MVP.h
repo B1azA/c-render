@@ -36,5 +36,4 @@ typedef struct {
 
 #define CR_MODEL_IDENTITY {0, 0, 0, 0, 0, 0, 1, 1, 1};
 #define CR_VIEW_IDENTITY {0, 0, 0, 0, 0, 0};
-
 #endif

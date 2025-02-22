@@ -142,7 +142,7 @@ void CR_PixelsDrawTriangle(Pixels *pixels, float x0, float y0, float x1,
 	yMax = yMax > y2Coord ? yMax : y2Coord;
 	yMax = yMax > pixels->height ? pixels->height : yMax;
 
-	char clockwise = 0;
+	bool clockwise = false;
 	for (int x = xMin; x < xMax + 1; x++) {
 		for (int y = yMin; y < yMax + 1; y++) {
 			int ABP = edgeFunction(x0Coord, y0Coord, x1Coord, y1Coord, x, y);
@@ -151,17 +151,17 @@ void CR_PixelsDrawTriangle(Pixels *pixels, float x0, float y0, float x1,
 
 			if (ABP >= 0 && BCP >= 0 && CAP >= 0) {
 				CR_PixelsDrawRealPixel(pixels, x, y, color);
-				clockwise = 1;
+				clockwise = true;
 			}
 		}
 	}
 
 	// Draw lines for smoother (more aesthetic) edges.
-	if (clockwise) {
-		CR_PixelsDrawLine(pixels, x0, y0, x1, y1, color);
-		CR_PixelsDrawLine(pixels, x1, y1, x2, y2, color);
-		CR_PixelsDrawLine(pixels, x0, y0, x2, y2, color);
-	}
+	// if (clockwise) {
+	// 	CR_PixelsDrawLine(pixels, x0, y0, x1, y1, color);
+	// 	CR_PixelsDrawLine(pixels, x1, y1, x2, y2, color);
+	// 	CR_PixelsDrawLine(pixels, x0, y0, x2, y2, color);
+	// }
 }
 
 void CR_PixelsDrawTriangleMVP(Pixels *pixels, float x0, float y0, float z0,
@@ -229,61 +229,22 @@ void CR_PixelsDrawTriangleMVP(Pixels *pixels, float x0, float y0, float z0,
 						  pointC[0], pointC[1], color);
 }
 
-void CR_PixelsDrawTriangleMV(Pixels *pixels, float x0, float y0, float x1,
-							 float y1, float x2, float y2, Color color,
-							 Model model, View view) {
+void CR_PixelsDrawTriangles(Pixels *pixels, float *vertices, int verticesLength,
+							Color color) {
+	for (int i = 0; i < verticesLength; i += 6) {
+		CR_PixelsDrawTriangle(pixels, vertices[i], vertices[i + 1],
+							  vertices[i + 2], vertices[i + 3], vertices[i + 4],
+							  vertices[i + 5], color);
+	}
+}
 
-	mat4 MV;
-
-	// create model matrix from translation, rotation and scale
-	mat4 modelMat;
-
-	mat4 translation;
-	mat4 rotation;
-	mat4 scale;
-
-	vec3 direction = {model.transX, model.transY, model.transZ};
-
-	glm_translate_make(translation, direction);
-
-	vec3 pivot = {0, 0, 0};
-
-	glm_rotate_atm(rotation, pivot, model.rotX, (vec3){1, 0, 0});
-	glm_rotate_at(rotation, pivot, model.rotY, (vec3){0, 1, 0});
-	glm_rotate_at(rotation, pivot, model.rotZ, (vec3){0, 0, 1});
-
-	glm_scale_make(scale, (vec3){model.scaleX, model.scaleY, model.scaleZ});
-
-	glm_mat4_mulN((mat4 *[]){&translation, &rotation, &scale}, 3, modelMat);
-
-	// create view (camera) matrix
-	mat4 viewMat;
-
-	mat4 viewTranslation;
-	mat4 viewRotation;
-
-	vec3 viewDirection = {-view.posX, -view.posY, -view.posZ};
-
-	glm_translate_make(viewTranslation, viewDirection);
-
-	glm_rotate_atm(viewRotation, pivot, -view.rotX, (vec3){1, 0, 0});
-	glm_rotate_at(viewRotation, pivot, -view.rotY, (vec3){0, 1, 0});
-	glm_rotate_at(viewRotation, pivot, -view.rotZ, (vec3){0, 0, 1});
-
-	glm_mat4_mul(viewRotation, viewTranslation, viewMat);
-
-	// create MV matrix
-	glm_mat4_mul(viewMat, modelMat, MV);
-
-	vec4 pointA = {x0, y0, 0, 1};
-	vec4 pointB = {x1, y1, 0, 1};
-	vec4 pointC = {x2, y2, 0, 1};
-
-	// move points
-	glm_mat4_mulv(MV, pointA, pointA);
-	glm_mat4_mulv(MV, pointB, pointB);
-	glm_mat4_mulv(MV, pointC, pointC);
-
-	CR_PixelsDrawTriangle(pixels, pointA[0], pointA[1], pointB[0], pointB[1],
-						  pointC[0], pointC[1], color);
+void CR_PixelsDrawTrianglesMVP(Pixels *pixels, float *vertices,
+							   int verticesLength, Color color, Model model,
+							   View view, Projection projection) {
+	for (int i = 0; i < verticesLength; i += 9) {
+		CR_PixelsDrawTriangleMVP(
+			pixels, vertices[i], vertices[i + 1], vertices[i + 2],
+			vertices[i + 3], vertices[i + 4], vertices[i + 5], vertices[i + 6],
+			vertices[i + 7], vertices[i + 8], color, model, view, projection);
+	}
 }
